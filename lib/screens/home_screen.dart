@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,6 +9,54 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const defaultTotalSeconds = 5;
+  int totalSeconds = defaultTotalSeconds;
+
+  late Timer timer;
+  bool isRunning = false;
+  int completeCount = 0;
+
+  void tick(Timer timer) {
+    setState(() {
+      totalSeconds = totalSeconds - 1;
+
+      if (totalSeconds == 0) {
+        isRunning = false;
+        completeCount = completeCount + 1;
+        totalSeconds = defaultTotalSeconds;
+        onPausePressed();
+      }
+    });
+  }
+
+  void onStartPressed() {
+    setState(() {
+      isRunning = true;
+    });
+
+    timer = Timer.periodic(const Duration(seconds: 1), tick);
+  }
+
+  void onPausePressed() {
+    setState(() {
+      isRunning = false;
+    });
+
+    timer.cancel();
+  }
+
+  String format(int seconds) {
+    Duration duration = Duration(seconds: seconds);
+    var timeSplits = Duration(seconds: seconds)
+        .toString()
+        .split(".")
+        .first
+        .toString()
+        .split(":");
+
+    return "${timeSplits[1]}:${timeSplits[2]}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                   alignment: Alignment.bottomCenter,
                   child: Text(
-                    "25:00",
+                    format(totalSeconds),
                     style: TextStyle(
                         color: Theme.of(context).cardColor,
                         fontSize: 89,
@@ -30,20 +77,24 @@ class _HomeScreenState extends State<HomeScreen> {
           Flexible(
               flex: 2,
               child: Center(
-                child: IconButton(
-                  iconSize: 120,
-                  color: Theme.of(context).cardColor,
-                  onPressed: () {},
-                  icon: const Icon(Icons.play_circle_outline_rounded),
-                ),
-              )),
+                  child: IconButton(
+                iconSize: 120,
+                color: Theme.of(context).cardColor,
+                onPressed: isRunning ? onPausePressed : onStartPressed,
+                icon: Icon(isRunning
+                    ? Icons.stop_circle_outlined
+                    : Icons.play_circle_outline_rounded),
+              ))),
           Flexible(
               flex: 1,
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
-                      color: Theme.of(context).cardColor,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(40),
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -58,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .color,
                             ),
                           ),
-                          Text("0",
+                          Text("$completeCount",
                               style: TextStyle(
                                 fontSize: 60,
                                 fontWeight: FontWeight.w600,
